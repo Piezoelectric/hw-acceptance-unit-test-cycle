@@ -1,7 +1,7 @@
 class MoviesController < ApplicationController
   
   def movie_params
-    params.require(:movie).permit(:title, :rating, :description, :release_date)
+    params.require(:movie).permit(:title, :rating, :description, :release_date, :director)
   end
 
   def show
@@ -11,6 +11,7 @@ class MoviesController < ApplicationController
   end
 
   def index
+    puts("DEBUG INDEX CALLED")
     sort = params[:sort] || session[:sort]
     case sort
     when 'title'
@@ -28,9 +29,24 @@ class MoviesController < ApplicationController
     if params[:sort] != session[:sort] or params[:ratings] != session[:ratings]
       session[:sort] = sort
       session[:ratings] = @selected_ratings
-      redirect_to :sort => sort, :ratings => @selected_ratings and return
+      #redirect_to :sort => sort, :ratings => @selected_ratings and return
+      # ^^ commenting out this provided line bc it screws things up?
     end
-    @movies = Movie.where(rating: @selected_ratings.keys).order(ordering)
+    
+    #hw3
+    if params[:director]
+      dir = params[:director]
+      puts("DIRECTOR SPECIFIED DEBUG", dir.to_s)
+      @movies = Movie.where(rating: @selected_ratings.keys, director: dir).order(ordering)
+      
+      #hw3 -- sad path, director is empty
+      if not dir
+        flash[:notice] = params[:title].to_s + "has no director info"
+      end
+    else
+      puts("NO DIRECTOR SPECIFIED DEBUG")
+      @movies = Movie.where(rating: @selected_ratings.keys).order(ordering)
+    end
   end
 
   def new
